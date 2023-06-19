@@ -1,4 +1,5 @@
 #Meateater forecast unit code--------------------------------
+###Probably need to look at using previous month inventory as max acheivable as in FL codeblock below
 =IFERROR(ROUND(IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="ytd.profile.cat",
 ((SUM(bup[@[jan 23 u]:[apr 23 u]])) / (XLOOKUP(bup[@[category]:[category]],ytd.curve[[cat.ytd]:[cat.ytd]],ytd.curve[may])))
 *(XLOOKUP(bup[@[category]:[category]],cat.curve[[cat]:[cat]],cat.curve[may]))*(1+bup[@[growth override 23]:[growth override 23]]),
@@ -32,12 +33,13 @@ IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="opt.season",
 #####---------------------
 ### First Lite Forecast Unit Code
 
-#### appended individual formulas with iferror and round added
 ### will need to manually update months in ytd.profile formula, it will not drag
 ##### applied to the month of May in 2022, YTD needs to sum to actualized months only
+##### Need to manually update the sumif portion in the middle to 
 
 #----------------------------------- Build on May actuals and June forecast
 # matts update to include iventory try and lock all months in the ytd to see if it will auto increment
+
 =IF(
 IFERROR(ROUND(IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="pattern.sa",
 XLOOKUP(bup[@[pattern after sku 23]:[pattern after sku 23]],bup[[sku]:[sku]],bup[[2023 units]:[2023 units]])*
@@ -73,9 +75,11 @@ SUM((bup[@[jan 23 units]:[may 23 units]]))/(XLOOKUP(bup[@[sub category ]:[sub ca
 XLOOKUP(bup[@[sub category ]:[sub category ]],style[[style]:[style]],style[jun])*
 (1+bup[@[growth override 23]:[growth override 23]])))))))),0),"shit")
 
-#need to adjust may if not dragging accross
+#Adjustment for max inventory level based on prevoius months eoh and next months on order. need to adjust may if not dragging accross
 >[@[may 23 inv]]+SUMIFS('on order'!$G:$G,'on order'!$C:$C,[@[sku]:[sku]],'on order'!$O:$O,IP$7,'on order'!$P:$P,IP$6),
 [@[may 23 inv]]+SUMIFS('on order'!$G:$G,'on order'!$C:$C,[@[sku]:[sku]],'on order'!$O:$O,IP$7,'on order'!$P:$P,IP$6),
+                       
+#mirrors the above codeblock, completes the if < last month inventory and current month on order
 
 IFERROR(ROUND(IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="pattern.sa",
 XLOOKUP(bup[@[pattern after sku 23]:[pattern after sku 23]],bup[[sku]:[sku]],bup[[2023 units]:[2023 units]])*
@@ -111,60 +115,9 @@ SUM((bup[@[jan 23 units]:[may 23 units]]))/(XLOOKUP(bup[@[sub category ]:[sub ca
 XLOOKUP(bup[@[sub category ]:[sub category ]],style[[style]:[style]],style[jun])*
 (1+bup[@[growth override 23]:[growth override 23]])))))))),0),"shit"))
 
+####--- Completed unit fcst codeblock for FL fcst workbook
 
-
-
-
-
-#-----------
-
->[@[may 23 inv]]+SUMIFS('on order'!$G:$G,'on order'!$C:$C,[@[sku]:[sku]],'on order'!$O:$O,IP$7,'on order'!$P:$P,IP$6)
-
-=IFERROR(ROUND(IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="pattern.sa",
-XLOOKUP(bup[@[pattern after sku 23]:[pattern after sku 23]],bup[[sku]:[sku]],bup[[2023 units]:[2023 units]])*
-XLOOKUP(bup[@[superstyle]:[superstyle]],style[[style]:[style]],style[may])*
-(1+bup[@[growth override 23]:[growth override 23]]),
-
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="pattern.dwo",
-XLOOKUP(bup[@[pattern after sku 23]:[pattern after sku 23]],bup[[sku]:[sku]],bup[[2022 units]:[2022 units]])/
-XLOOKUP(bup[@[pattern after sku 23]:[pattern after sku 23]],bup[[sku]:[sku]],bup[[2022 vol ach]:[2022 vol ach]])*
-XLOOKUP(bup[@[superstyle]:[superstyle]],style[[style]:[style]],style[may])*
-(1+bup[@[growth override 23]:[growth override 23]]),
-
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="roll.avg.ly",
-AVERAGE([@[apr 22 units]],[@[may 22 units]],[@[jun 22 units]])*
-(1+bup[@[growth override 23]:[growth override 23]]),
-
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="roll.avg.2y",
-SUM(([@[apr 21 units]]*0.1133),([@[may 21 units]]*0.1133),([@[jun 21 units]]*0.1133),
-([@[apr 22 units]]*0.22),([@[may 22 units]]*0.22),([@[jun 22 units]]*0.22))*(1+bup[@[growth override 23]:[growth override 23]]),
-
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="opt.season",
-(bup[@[2022 units]:[2022 units]]/bup[@[2022 vol ach]:[2022 vol ach]])*
-XLOOKUP(bup[@[superstyle]:[superstyle]],style[[style]:[style]],style[may])*
-(1+bup[@[growth override 23]:[growth override 23]]),
-
-#applied to the month of May in 2022, YTD needs to sum to actualized months only
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="ytd.profile.style",
-SUM((bup[@[jan 23 units]:[apr 23 units]]))/(XLOOKUP(bup[@[superstyle]:[superstyle]],ytd[[ytd]:[ytd]],ytd[apr]))*
-XLOOKUP(bup[@[superstyle]:[superstyle]],style[[style]:[style]],style[may])*
-(1+bup[@[growth override 23]:[growth override 23]]),
-
-#applied to the month of May in 2022, YTD needs to sum to actualized months only
-IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="ytd.profile.subcat",
-SUM((bup[@[jan 23 units]:[apr 23 units]]))/(XLOOKUP(bup[@[sub category ]:[sub category ]],ytd[[ytd]:[ytd]],ytd[apr]))*
-XLOOKUP(bup[@[sub category ]:[sub category ]],style[[style]:[style]],style[may])*
-(1+bup[@[growth override 23]:[growth override 23]])))))))),0),"shit")
-
-
-
-###----------------------------------
-
-
-
-
-
-
+### Indiviudal formulas for fcst workbook
 #FL 1 year rolling average no weights
 =IF(bup[@[forecast strategy 23]:[forecast strategy 23]]="roll.avg.ly",
 AVERAGE([@[apr 22 units]],[@[may 22 units]],[@[jun 22 units]])*
