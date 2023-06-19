@@ -248,3 +248,57 @@ IF(AND([@[2021 vol ach]]>=0.85,[@[2022 vol ach]]>=0.85),"roll.avg.2y","not yet")
 ([@[mar 23 flag]]*XLOOKUP([@superstyle],style[style],style[mar]))+
 ([@[apr 23 flag]]*XLOOKUP([@superstyle],style[style],style[apr]))+
 ([@[may 23 flag]]*XLOOKUP([@superstyle],style[style],style[may])),"shit")
+
+
+---------------------
+#power bi filtering and calculated measures
+
+
+#calculated Measures
+***Revenue by year
+2021 revenue = 
+SUMX(FILTER('max data 4-3', YEAR('max data 4-3'[date]) = 2021), 'max data 4-3'[revenue])
+
+2021 revenue = 
+SUMX(FILTER('Append 21-22', YEAR('Append 21-22'[Date]) = 2021), 'Append 21-22'[Amount])
+
+2022 revenue = 
+SUMX(FILTER('max data 4-3', YEAR('max data 4-3'[date]) = 2022), 'max data 4-3'[revenue])
+
+***yoy revenue
+21/22 yoy revenue = 'max data 4-3'[2022 revenue]/'max data 4-3'[2021 revenue]-1
+
+***units by year
+2021 units = 
+SUMX(FILTER('max data 4-3', YEAR('max data 4-3'[date]) = 2021), 'max data 4-3'[units])
+
+2021 units = 
+SUMX(FILTER('Append 21-22', YEAR('Append 21-22'[Date]) = 2021), 'Append 21-22'[Quantity])
+
+2022 units = 
+SUMX(FILTER('max data 4-3', YEAR('max data 4-3'[date]) = 2022), 'max data 4-3'[units])
+
+***yoy units
+21/22 yoy units = 'max data 4-3'[2022 units]/'max data 4-3'[2021 units]-1
+
+--------------------------------------------------------
+#power bi filtering
+
+#update to include scheels and outfitter in "wholesale
+if [Sales Channel] = "Amazon" then "Amazon"
+else if [Sales Channel] = "Salesforce" then "DTC" 
+else if [Memo] = "Return Store Credit" then "DTC" 
+else if [Price Level] = "No Charge" then "No Charge"
+else if [Sales Channel] = "Wholesale" then "Wholesale" 
+else if [Price Level] = "Cabelas Canada" then "Wholesale" 
+else if Text.Contains([Price Level], "NABA") then "Wholesale" 
+else if Text.Contains([Price Level], "Phelps") then "Wholesale"
+else if Text.Contains([Price Level], "Wholesale") then "Wholesale" 
+else if Text.Contains([Shipping Addressee], "Scheels") then "Wholesale"
+else if Text.Contains([Shipping Addressee], "Outfitters") then "Wholesale"
+else if [Sales Channel] = "Shopify" and [Date] > #date(2022,8,21) then "Retail"
+else if [Sales Channel] = "Shopify" and [Date] <= #date(2022,8,21) then "DTC"
+else if [Quantity] > 3 then "Wholesale"
+else if [ME SKU] = "eGiftCertificate" then "Gift Certificate"
+else if [Price Level] = "Custom" and [Type] = "Cash Sale" then "DTC"
+else "shit"
